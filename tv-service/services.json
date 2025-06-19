@@ -1,9 +1,9 @@
 {
-  "id": "com.slg.lgtv2mqtt.service",
-  "description": "LG TV 2 MQTT TV Service",
+  "id": "com.danvnest.applauncher+mqtt.service",
+  "description": "MQTT Service",
   "services": [
     {
-      "name": "com.slg.lgtv2mqtt.service"
+      "name": "com.danvnest.applauncher+mqtt.service"
     }
   ]
 }

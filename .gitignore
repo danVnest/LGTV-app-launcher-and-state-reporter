@@ -1,7 +1,6 @@
-.idea/
-.vscode/
-*.iml
-node_modules/
+*.code-workspace
 *.ipk
+node_modules/
 package-lock.json
 dist/
+.DS_Store

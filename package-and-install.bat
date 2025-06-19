@@ -13,4 +13,4 @@ echo "Packaging"
 CMD /C ares-package tv-app/ tv-service/
 
 echo "Installing"
-CMD /C ares-install .\com.slg.lgtv2mqtt_0.0.1_all.ipk -d tv
+CMD /C ares-install .\com.danvnest.applauncher+mqtt_1.0.0_all.ipk -d tv

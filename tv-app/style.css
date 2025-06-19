@@ -1,0 +1,61 @@
+body {
+  margin: 0;
+  background-color: #111;
+  color: white;
+  font-family: sans-serif;
+  overflow: hidden;
+}
+
+.indicator {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  transition: background-color 0.5s ease, box-shadow 0.5s ease;
+}
+
+.indicator.pending {
+  background-color: yellow;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 1);
+}
+
+.indicator.failed {
+  background-color: red;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 1);
+}
+
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 30px;
+  padding: 40px;
+  justify-items: center;
+  align-items: center;
+  height: 100vh;
+  box-sizing: border-box;
+}
+
+.app-card {
+  width: 320px; /* 1980px / 4 app cards per row * 2/3 proportion of card to gap  */
+  height: 180px; /* 1080px / 4 app cards per column * 2/3 proportion of card to gap  */
+  background: linear-gradient(to top, black, #222);
+  border-radius: 25px;
+  box-shadow: 0 0 50px rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  outline: none;
+  cursor: pointer;
+  transform-style: preserve-3d
+}
+
+.app-icon {
+  max-width: 66%;
+  max-height: 66%;
+  object-fit: contain;
+  pointer-events: none;
+  transform: translateZ(50px);
+}
