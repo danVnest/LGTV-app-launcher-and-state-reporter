@@ -6,27 +6,7 @@ body {
   overflow: hidden;
 }
 
-.indicator {
-  position: absolute;
-  top: 20px;
-  right: 20px;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  transition: background-color 0.5s ease, box-shadow 0.5s ease;
-}
-
-.indicator.pending {
-  background-color: yellow;
-  box-shadow: 0 0 20px rgba(255, 255, 255, 1);
-}
-
-.indicator.failed {
-  background-color: red;
-  box-shadow: 0 0 20px rgba(255, 255, 255, 1);
-}
-
-.grid-container {
+#app-grid {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 30px;
@@ -42,14 +22,17 @@ body {
   height: 180px; /* 1080px / 4 app cards per column * 2/3 proportion of card to gap  */
   background: linear-gradient(to top, black, #222);
   border-radius: 25px;
-  box-shadow: 0 0 50px rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 40px rgba(255, 255, 255, 0.5);
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
   outline: none;
   cursor: pointer;
   transform-style: preserve-3d
+}
+
+.app-card.focused {
+  box-shadow: 0 0 50px rgba(255, 255, 255, 0.3);
 }
 
 .app-icon {
@@ -58,4 +41,79 @@ body {
   object-fit: contain;
   pointer-events: none;
   transform: translateZ(50px);
+}
+
+#service-indicator {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 10px;
+  height: 10px;
+  margin: 10px;
+  z-index: 9999;
+  border-radius: 50%;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 1);
+  transition: background-color 0.5s ease, transform 0.2s;
+  cursor: pointer;
+}
+
+#service-indicator:hover {
+  transform: scale(2);
+}
+
+#service-indicator.success {
+  background-color: green;
+}
+
+#service-indicator.pending {
+  background-color: yellow;
+}
+
+#service-indicator.failed {
+  background-color: red;
+}
+
+#overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 99;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: rgba(0, 0, 0, 0.9);
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+
+#overlay.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#overlay.logs {
+  cursor: pointer;
+}
+
+#overlay .logs-textbox {
+  max-width: 90vw;
+  max-height: 90vh;
+  padding: 25px;
+  border-radius: 25px;
+  background: #111;
+  color: lightgrey;
+  font-family: monospace;
+  font-size: 14px;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-all;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  cursor: default;
+}
+
+#overlay.logs .logs-textbox {
+  opacity: 1;
 }
