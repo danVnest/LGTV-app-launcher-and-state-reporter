@@ -1,6 +1,7 @@
 *.code-workspace
 *.ipk
-tv-service/
+tv-service/*
+!tv-service/services.json
 node_modules/
 package-lock.json
 .last_checksum

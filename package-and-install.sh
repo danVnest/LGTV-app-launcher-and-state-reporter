@@ -1,8 +1,6 @@
 service_changes=true
 checksum_file="tv-service-src/.last_checksum"
-if [ ! -d tv-service ]; then
-    mkdir tv-service
-elif [ -f "$checksum_file" ]; then
+if [ -f "$checksum_file" ]; then
     current_checksum=$(find tv-service-src -type f ! -name '.last_checksum' -exec md5sum {} + | sort | md5sum | awk '{print $1}') || exit
     last_checksum=$(cat "$checksum_file")
     if [ "$current_checksum" = "$last_checksum" ]; then
