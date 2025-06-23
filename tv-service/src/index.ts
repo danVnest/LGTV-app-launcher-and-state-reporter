@@ -1,8 +1,7 @@
 import Service from "webos-service";
 import { LgTvMqtt, LgTvMqttConfig } from "./lgtv-mqtt";
 
-const service = new Service("com.danvnest.applauncher+mqtt.service"); // Create service by service name on package.json
-
+const service = new Service("com.danvnest.applauncher+mqtt.service");
 const config: LgTvMqttConfig = {
   host: "YOUR MQTT BROKER HOST",
   port: 1883,
@@ -12,13 +11,6 @@ const config: LgTvMqttConfig = {
 };
 
 const lgTvMqtt = new LgTvMqtt(service, config);
-
 service.register("start", (message) => lgTvMqtt.start(message));
-
-service.register("stop", (message) => lgTvMqtt.stop(message));
-
-service.register("logs", (message) => lgTvMqtt.logs(message));
-
-service.register("clearLogs", (message) => lgTvMqtt.clearLogs(message));
-
 service.register("getState", (message) => lgTvMqtt.getState(message));
+service.register("getLogs", (message) => lgTvMqtt.getLogs(message));
