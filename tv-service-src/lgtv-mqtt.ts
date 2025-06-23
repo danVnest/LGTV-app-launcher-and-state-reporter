@@ -79,7 +79,7 @@ export class LgTvMqtt {
 
   private playStateConfig = JSON.stringify(this.createAutoDiscoveryConfig("mdi:play-pause", "play", "Play State"));
   private appIdConfig = JSON.stringify(this.createAutoDiscoveryConfig("mdi:apps", "app", "Application ID"));
-  private typeConfig = JSON.stringify(this.createAutoDiscoveryConfig("mdi:import", "type", "Discovery Type"));
+  private typeConfig = JSON.stringify(this.createAutoDiscoveryConfig("mdi:import", "type", "Discovery Type")); // TODO: Do we need discovery type?
   private publishOptionRetain: IClientPublishOptions = { qos: 0, retain: true };
   private publishOptionNoRetain: IClientPublishOptions = { qos: 0, retain: false };
 
@@ -141,6 +141,7 @@ export class LgTvMqtt {
       const state = this.createState(info.playState, info.appId, info.type);
       this.client?.publish(this.topicState, JSON.stringify(state), this.publishOptionNoRetain);
     } else {
+      // TODO: test why this is needed and when it occurs, should we just ignore?
       this.logging.log(`WARNING: Unexpected foreground app update:\n${JSON.stringify(message)}`);
       this.client?.publish(
         this.topicState,
@@ -162,6 +163,7 @@ export class LgTvMqtt {
       discoveryConfig.forEach(({ topic, config }) => {
         this.client?.publish(topic, config, this.publishOptionRetain, (error) => this.handlePublishEnd(error, topic));
       });
+      this.logging.log("Does this show before or after 'Published successfully to...'?");
     } catch (error) {
       this.logging.log(`Failed to publish Home Assistant auto-discovery configs, error:\n${JSON.stringify(error)}`);
       message.respond({ started: false });
@@ -179,6 +181,7 @@ export class LgTvMqtt {
         this.publishOptionNoRetain,
         (error) => this.handlePublishEnd(error, this.topicState)
       );
+      this.logging.log("Does this show before or after 'Published successfully to...'?");
     } catch (error) {
       this.logging.log(`Failed to send initial TV state, error:\n${JSON.stringify(error)}`);
       message.respond({ started: false });
@@ -193,6 +196,7 @@ export class LgTvMqtt {
       this.client?.publish(this.topicAvailability, "online", this.publishOptionRetain, (error) =>
         this.handlePublishEnd(error, this.topicAvailability)
       );
+      this.logging.log("Does this show before or after 'Published successfully to...'?");
     } catch (error) {
       this.logging.log(`Failed to notify of availability, error:\n${JSON.stringify(error)}`);
       message.respond({ started: false });

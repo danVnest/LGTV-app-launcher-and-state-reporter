@@ -1,6 +1,7 @@
 *.code-workspace
 *.ipk
+tv-service/
 node_modules/
 package-lock.json
-dist/
+.last_checksum
 .DS_Store
