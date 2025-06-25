@@ -46,7 +46,7 @@ function renderGrid() {
       scale: 1.33,
       speed: 1000,
       glare: true,
-      "max-glare": 0.25,
+      "max-glare": 0.1,
     });
 
     card.addEventListener("click", () => launchApp(app));
@@ -61,13 +61,13 @@ function renderGrid() {
   });
 
   cards = document.querySelectorAll(".app-card");
-
-  focusCard(0);
+  focusCard(focusCardIndex);
 }
 
 function focusCard(index) {
   unfocusCards();
-  card = cards[index];
+  if (index === null) return;
+  let card = cards[index];
   card.focus();
   card.classList.add("focused");
   card.vanillaTilt.onMouseEnter(); // ensures the tilt animation runs correctly
@@ -75,7 +75,7 @@ function focusCard(index) {
   const centerY = card.vanillaTilt.top + card.vanillaTilt.height / 2;
   const direction = index % 2 === 0 ? 1 : -1;
   let angle = Math.random() * Math.PI * 2 * direction;
-  card.dataset.focusTiltInterval = setInterval(() => {
+  card._focusTiltInterval = setInterval(() => {
     card.vanillaTilt.onMouseMove({
       clientX: centerX + (Math.cos(angle) * card.vanillaTilt.width) / 3,
       clientY: centerY + (Math.sin(angle) * card.vanillaTilt.height) / 3,
@@ -89,8 +89,10 @@ function focusCard(index) {
 
 function unfocusCards() {
   document.querySelectorAll(".app-card.focused").forEach((card) => {
-    clearInterval(card.dataset.focusTiltInterval);
-    delete card.dataset.focusTiltInterval;
+    if (card._focusTiltInterval) {
+      clearInterval(card._focusTiltInterval);
+      card._focusTiltInterval = null;
+    }
     card.vanillaTilt.onMouseLeave(); // simulate mouse leaving the card to reset
     card.classList.remove("focused");
   });
@@ -112,7 +114,9 @@ document.addEventListener("mousemove", () => {
 
 document.addEventListener("keydown", (event) => {
   if (event.key === "Enter") {
-    launchApp(apps[focusCardIndex]);
+    if (focusCardIndex !== null && !isNaN(focusCardIndex) && apps[focusCardIndex]) {
+      launchApp(apps[focusCardIndex]);
+    }
     return;
   }
   const row = Math.floor(focusCardIndex / gridColumns);
@@ -125,8 +129,7 @@ document.addEventListener("keydown", (event) => {
     const belowCardIndex = ((row + 1) % gridRows) * gridColumns + column;
     focusCard(Math.min(belowCardIndex, apps.length - 1));
   } else if (event.key === "ArrowUp") {
-    const aboveCardIndex =
-      ((row - 1 + gridRows) % gridRows) * gridColumns + column;
+    const aboveCardIndex = ((row - 1 + gridRows) % gridRows) * gridColumns + column;
     focusCard(Math.min(aboveCardIndex, apps.length - 1));
   }
 });
