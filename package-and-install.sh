@@ -12,10 +12,11 @@ echo "$current_checksum" >"$checksum_file" || exit
 if [ $service_changes = true ]; then
     echo "Compiling tv-service"
     cd tv-service-src || exit
-    echo "> npm install && npm run build && npm run postbuild"
+    echo "> npm install && npm run build && cp package.json ../tv-service/ && cd ../tv-service && npm install --omit=dev"
     npm install || exit
     npm run build || exit
-    npm run postbuild || exit
+    cp package.json ../tv-service/ || exit
+    cd ../tv-service && npm install --omit=dev || exit
     cd .. || exit
     echo "\n"
 fi

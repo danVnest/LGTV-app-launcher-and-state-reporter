@@ -4,17 +4,16 @@
   "description": "App Launcher + MQTT",
   "main": "index.js",
   "scripts": {
-    "postbuild": "cp package.json ../tv-service && cd ../tv-service && npm install --omit=dev",
     "build": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "mqtt": "^4.3.7"
+    "mqtt": "^4.3.8"
   },
   "devDependencies": {
     "@types/webos-service": "^0.4.6",
-    "typescript": "5.3.2"
+    "typescript": "5.8.3"
   },
-  "author": "",
+  "author": "danVnest",
   "license": "BSD"
 }
