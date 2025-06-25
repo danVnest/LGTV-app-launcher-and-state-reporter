@@ -1,6 +1,6 @@
 {
   "name": "com.danvnest.applauncher+mqtt.service",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "App Launcher + MQTT",
   "main": "index.js",
   "scripts": {

@@ -2,7 +2,7 @@
   "title": "App Launcher + MQTT",
   "id": "com.danvnest.applauncher+mqtt",
   "vendor": "danVnest",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "type": "web",
   "main": "index.html",
   "icon": "icon.png",
