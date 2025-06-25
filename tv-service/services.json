@@ -3,7 +3,18 @@
   "description": "MQTT Service",
   "services": [
     {
-      "name": "com.danvnest.applauncher+mqtt.service"
+      "name": "com.danvnest.applauncher+mqtt.service",
+      "description": "MQTT Service",
+      "commands": [
+        {
+          "name": "getConnectionState",
+          "description": "Get MQTT service connection state"
+        },
+        {
+          "name": "getLogs",
+          "description": "Get MQTT service logs"
+        }
+      ]
     }
   ]
 }
