@@ -11,6 +11,5 @@ const config: LgTvMqttConfig = {
 };
 
 const lgTvMqtt = new LgTvMqtt(service, config);
-service.register("start", (message) => lgTvMqtt.start(message));
-service.register("getState", (message) => lgTvMqtt.getState(message));
+service.register("getConnectionState", (message) => lgTvMqtt.getConnectionState(message));
 service.register("getLogs", (message) => lgTvMqtt.getLogs(message));
