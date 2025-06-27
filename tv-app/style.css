@@ -28,7 +28,7 @@ body {
   justify-content: center;
   outline: none;
   cursor: pointer;
-  transform-style: preserve-3d
+  transform-style: preserve-3d;
 }
 
 .app-card.focused {
@@ -45,32 +45,44 @@ body {
 
 #service-indicator {
   position: absolute;
-  top: 20px;
-  right: 20px;
+  top: 0px;
+  right: 0px;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: transparent;
+  transition: transform 0.5s ease;
+  cursor: pointer;
+  z-index: 9999;
+}
+
+#service-indicator::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
   width: 10px;
   height: 10px;
-  margin: 10px;
-  z-index: 9999;
   border-radius: 50%;
   box-shadow: 0 0 20px rgba(255, 255, 255, 1);
-  transition: background-color 0.5s ease, transform 0.2s;
-  cursor: pointer;
+  transition: background-color 0.5s ease;
+  transform: translate(-50%, -50%);
+}
+
+#service-indicator.success::after {
+  background-color: green;
+}
+
+#service-indicator.pending::after {
+  background-color: yellow;
+}
+
+#service-indicator.failed::after {
+  background-color: red;
 }
 
 #service-indicator:hover {
   transform: scale(2);
-}
-
-#service-indicator.success {
-  background-color: green;
-}
-
-#service-indicator.pending {
-  background-color: yellow;
-}
-
-#service-indicator.failed {
-  background-color: red;
 }
 
 #overlay {
