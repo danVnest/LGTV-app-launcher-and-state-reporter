@@ -1,3 +1,7 @@
+![App Launcher](applauncher.gif)
+
+# TODO: Update this README
+
 # LG TV 2 MQTT WebOS Service
 For WebOS 6. Maybe it works for earlier or later versions...?
 ## Setup tv
