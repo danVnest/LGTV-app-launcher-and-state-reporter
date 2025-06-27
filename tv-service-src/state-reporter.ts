@@ -53,9 +53,22 @@ export class StateReporter {
   constructor(private service: Service, mqttConfig: MQTTConfig) {
     this.logger.log("Starting the TV state reporting service");
     try {
+      // var activitySpec = {
+      //   activity: {
+      //     name: "tv-state-reporter",
+      //     description: "Monitors for TV state changes and reports to Home Assistant",
+      //     type: { foreground: true },
+      //   },
+      //   start: true,
+      //   replace: true,
+      // };
       this.service.activityManager.create("tv-state-reporter", (activity) => {
         this.logger.log("Service set to maintain the connection in the background");
       });
+      // this.service.call("luna://com.palm.activitymanager/create", activitySpec, (reply) => {
+      //   this.logger.log("Activity manager reply:", reply); // TODO: remove
+      //   this.logger.log("Service set to run in the background of all apps");
+      // });
     } catch (error) {
       this.logger.log("ERROR - Failed to set service to run in the background of all apps:", error);
     }
@@ -185,7 +198,7 @@ export class StateReporter {
       this.publishState();
     } else {
       this.logger.log("WARNING - Unexpected foreground app update:", response); // TODO: monitor this over time, handle different updates instead of warning
-      this.state = "idle";
+      this.state = "idle"; // TODO: find all possible states that are reported, is "idle" appropriate? perhaps do "unknown" and handle in Home Assistant
       this.publishState();
     }
     this.publishAvailability();
