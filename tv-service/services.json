@@ -1,18 +1,18 @@
 {
-  "id": "com.danvnest.applauncher+mqtt.service",
-  "description": "MQTT Service",
+  "id": "com.danvnest.applauncherandstatereporter.service",
+  "description": "Service that reports TV state to Home Assistant",
   "services": [
     {
-      "name": "com.danvnest.applauncher+mqtt.service",
-      "description": "MQTT Service",
+      "name": "com.danvnest.applauncherandstatereporter.service",
+      "description": "Service that reports TV state to Home Assistant",
       "commands": [
         {
           "name": "getConnectionState",
-          "description": "Get MQTT service connection state"
+          "description": "Get service's connection state"
         },
         {
           "name": "getLogs",
-          "description": "Get MQTT service logs"
+          "description": "Get service's logs"
         }
       ]
     }

@@ -1,6 +1,14 @@
 import { Client, connect, IClientOptions, IClientPublishOptions } from "mqtt";
 import Service, { Message } from "webos-service";
 
+export interface MQTTConfig {
+  host: string;
+  port: number;
+  username: string;
+  password: string;
+  deviceID: string; // if multiple TVs, each should have a unique ID
+}
+
 interface ForegroundAppInfo {
   windowId: string;
   appId: string;
@@ -9,27 +17,13 @@ interface ForegroundAppInfo {
   playState: string;
 }
 
-interface ForegroundAppIdResponse {
+interface ForegroundAppResponse {
   subscribed: boolean;
   foregroundAppInfo: ForegroundAppInfo[];
   returnValue: boolean;
 }
 
-interface AppState {
-  play: string;
-  app: string;
-  type: string;
-}
-
-export interface LgTvMqttConfig {
-  host: string; // Your MQTT broker host
-  port: number; // Your MQTT broker port, default 1883
-  username: string; // Your MQTT username
-  password: string; // Your MQTT password
-  deviceID: string; // This should be unique across the MQTT network. If you're using this on multiple TVs, update this
-}
-
-class Logging {
+class Logger {
   private logs: string[] = [];
   log(log: string, ...extraLogContent: any[]) {
     if (extraLogContent.length > 0) {
@@ -47,184 +41,154 @@ class Logging {
   }
 }
 
-export class LgTvMqtt {
-  private logging = new Logging();
+export class StateReporter {
+  private logger = new Logger();
   private client: Client;
-  private mqttConfig: IClientOptions;
-  private connectUrl: string;
-  private keepAlive: Record<string, any> = {};
+  private deviceID: string;
   private wasConnected = false;
-  private foregroundAppState: AppState = { play: "idle", app: "unknown", type: "unknown" };
-  private topicAutoDiscoveryPlayState: string;
-  private topicAutoDiscoveryAppId: string;
-  private topicAutoDiscoveryType: string;
-  private topicAvailability: string;
-  private topicState: string;
-  private playStateConfig: string;
-  private appIdConfig: string;
-  private typeConfig: string;
-  private publishOptionRetain: IClientPublishOptions = { qos: 0, retain: true };
-  private publishOptionNoRetain: IClientPublishOptions = { qos: 0, retain: false };
-  constructor(private service: Service, private config: LgTvMqttConfig) {
-    this.connectUrl = `mqtt://${this.config.host}:${this.config.port}`;
-    this.topicAutoDiscoveryPlayState = `homeassistant/sensor/${this.config.deviceID}/playState/config`;
-    this.topicAutoDiscoveryAppId = `homeassistant/sensor/${this.config.deviceID}/appId/config`;
-    this.topicAutoDiscoveryType = `homeassistant/sensor/${this.config.deviceID}/type/config`;
-    this.topicAvailability = `LGTV2MQTT/${this.config.deviceID}/availability`;
-    this.topicState = `LGTV2MQTT/${this.config.deviceID}/state`;
-    this.mqttConfig = {
-      username: this.config.username,
-      password: this.config.password,
+  private state: string = "idle";
+  private stateTopic: string;
+  private availabilityTopic: string;
+  private publishOptions: IClientPublishOptions = { qos: 0, retain: true };
+  constructor(private service: Service, mqttConfig: MQTTConfig) {
+    this.logger.log("Starting the TV state reporting service");
+    try {
+      this.service.activityManager.create("tv-state-reporter", (activity) => {
+        this.logger.log("Service set to maintain the connection in the background");
+      });
+    } catch (error) {
+      this.logger.log("ERROR - Failed to set service to run in the background of all apps:", error);
+    }
+    this.logger.log("Connecting to the Home Assistant MQTT server");
+    this.deviceID = mqttConfig.deviceID;
+    this.stateTopic = `stateReporter/${this.deviceID}/state`;
+    this.availabilityTopic = `stateReporter/${this.deviceID}/availability`;
+    let connectUrl: string = `mqtt://${mqttConfig.host}:${mqttConfig.port}`;
+    let clientConfig: IClientOptions = {
+      username: mqttConfig.username,
+      password: mqttConfig.password,
       keepalive: 180, // automatically checks for connection, closing if no response for 3 minutes
       connectTimeout: 10000, // 10 seconds
       reconnectPeriod: 3000, // 3 seconds
       // reconnectOnConnackError: true, // TODO: only available on MQTT v5+ which does not work with webOS SDK 6, find another way
       will: {
-        topic: this.topicAvailability,
+        topic: this.availabilityTopic,
         payload: "offline",
         retain: false,
         qos: 0,
       },
     };
-    this.playStateConfig = JSON.stringify(this.createAutoDiscoveryConfig("mdi:play-pause", "play", "Play State"));
-    this.appIdConfig = JSON.stringify(this.createAutoDiscoveryConfig("mdi:apps", "app", "Application ID"));
-    this.typeConfig = JSON.stringify(this.createAutoDiscoveryConfig("mdi:import", "type", "Discovery Type"));
-    this.foregroundAppState = this.createState("idle", "unknown", "unknown");
-    this.logging.log("Starting the LGTV MQTT connection service");
-    this.service.activityManager.create("keepAlive", (activity) => {
-      this.keepAlive = activity;
-    });
-    this.logging.log("Service set to maintain the connection in the background");
-    this.logging.log("Connecting to the MQTT server");
-    this.client = connect(this.connectUrl, this.mqttConfig);
+    this.client = connect(connectUrl, clientConfig);
     this.client.on("connect", () => this.handleConnect());
-    this.client.on("close", () => this.logging.log("WARNING - MQTT server disconnected, attempting to reconnect"));
-    this.client.on("error", (error: Error | undefined) => this.logging.log("ERROR - MQTT connection error:", error));
+    this.client.on("close", () =>
+      this.logger.log("WARNING - Home Assistant MQTT server disconnected, automatically attempting to reconnect")
+    );
+    this.client.on("error", (error: Error | undefined) =>
+      this.logger.log("ERROR - Home Assistant MQTT connection error:", error)
+    );
   }
 
   private handleConnect() {
     try {
       if (!this.wasConnected) {
-        this.logging.log("Successfully connected to the MQTT server");
+        this.logger.log("Successfully connected to the Home Assistant MQTT server");
         this.publishAutoDiscovery();
-        this.publishAppState();
+        this.publishState();
         this.publishAvailability();
-        this.logging.log("Subscribing to media service for foreground app state updates");
+        this.logger.log("Subscribing to media service for foreground app state updates");
         this.service
           .subscribe("luna://com.webos.media/getForegroundAppInfo", {
             subscribe: true,
           })
           .on("response", (message: Message) =>
-            this.handleForegroundAppResponse(message.payload as ForegroundAppIdResponse)
+            this.handleForegroundAppResponse(message.payload as ForegroundAppResponse)
           );
-        this.logging.log("Service started successfully, reporting media state via MQTT");
+        this.logger.log("Service started successfully, reporting media state to Home Assistant");
         this.wasConnected = true;
       } else {
-        this.logging.log("Reconnected to the MQTT server");
-        this.publishAppState();
+        this.logger.log("Reconnected to the Home Assistant MQTT server");
+        this.publishState();
         this.publishAvailability();
       }
     } catch (error) {
-      this.logging.log("ERROR - LGTV MQTT service connected then failed due to error:", error);
+      this.logger.log("ERROR - Service connected successfully, then failed due to error:", error);
     }
-  }
-
-  private handleForegroundAppResponse(response: ForegroundAppIdResponse) {
-    if (!this.client.connected) {
-      this.logging.log("WARNING - MQTT connection lost, unable to publish media state");
-      return;
-    }
-    if (
-      response &&
-      response.foregroundAppInfo &&
-      Array.isArray(response.foregroundAppInfo) &&
-      response.foregroundAppInfo.length > 0
-    ) {
-      const info: ForegroundAppInfo = response.foregroundAppInfo[0];
-      this.foregroundAppState = this.createState(info.playState, info.appId, info.type);
-      this.publishAppState();
-    } else {
-      // TODO: test why this is needed and when it occurs, should we just ignore?
-      this.logging.log("WARNING - Unexpected foreground app update:", response);
-      this.foregroundAppState = this.createState("idle", "unknown", "unknown");
-      this.client.publish(this.topicState, JSON.stringify(this.foregroundAppState), this.publishOptionNoRetain);
-    }
-    this.publishAvailability();
   }
 
   private publishAutoDiscovery() {
-    this.logging.log("Sending Home Assistant auto-discovery configs");
+    this.logger.log("Sending Home Assistant sensor auto-discovery configs");
     try {
-      const discoveryConfig = [
-        { topic: this.topicAutoDiscoveryPlayState, config: this.playStateConfig },
-        { topic: this.topicAutoDiscoveryAppId, config: this.appIdConfig },
-        { topic: this.topicAutoDiscoveryType, config: this.typeConfig },
-      ];
-      discoveryConfig.forEach(({ topic, config }) => {
-        this.client.publish(topic, config, this.publishOptionRetain, (error: Error | undefined) =>
-          this.handlePublishError(error, topic)
-        );
-      });
+      let topic = `homeassistant/sensor/${this.deviceID}/state/config`;
+      this.client.publish(
+        topic,
+        JSON.stringify({
+          "~": `stateReporter/${this.deviceID}/`,
+          name: "State",
+          unique_id: `${this.deviceID}_state`,
+          value_template: "{{ value }}",
+          state_topic: `${this.stateTopic}`,
+          availability_topic: `${this.availabilityTopic}`,
+          icon: "mdi:play-pause",
+          device: {
+            identifiers: `${this.deviceID}`,
+            name: `${this.deviceID}`,
+            manufacturer: "LG",
+            model: `${this.deviceID}`,
+          },
+        }),
+        this.publishOptions,
+        (error: Error | undefined) => this.handlePublishError(error, topic)
+      );
     } catch (error) {
-      this.logging.log("ERROR - Failed to send Home Assistant auto-discovery configs:", error);
+      this.logger.log("ERROR - Failed to send Home Assistant sensor auto-discovery configs:", error);
       throw error;
     }
   }
 
-  private publishAppState() {
-    this.logging.log("Sending TV's foreground app state:", this.foregroundAppState);
+  private publishState() {
+    this.logger.log(`Sending TV's media state: '${this.state}'`);
     try {
-      this.client.publish(
-        this.topicState,
-        JSON.stringify(this.foregroundAppState),
-        this.publishOptionNoRetain,
-        (error: Error | undefined) => this.handlePublishError(error, this.topicState)
+      this.client.publish(this.stateTopic, this.state, this.publishOptions, (error: Error | undefined) =>
+        this.handlePublishError(error, this.stateTopic)
       );
     } catch (error) {
-      this.logging.log("ERROR - Failed to send TV state:", error);
+      this.logger.log("ERROR - Failed to send TV's media state:", error);
       throw error;
     }
   }
 
   private publishAvailability() {
-    this.logging.log("Sending notification of availability");
+    this.logger.log("Sending notification of availability");
     try {
-      this.client.publish(this.topicAvailability, "online", this.publishOptionRetain, (error: Error | undefined) =>
-        this.handlePublishError(error, this.topicAvailability)
+      this.client.publish(this.availabilityTopic, "online", this.publishOptions, (error: Error | undefined) =>
+        this.handlePublishError(error, this.availabilityTopic)
       );
     } catch (error) {
-      this.logging.log("ERROR - Failed to notify of availability:", error);
+      this.logger.log("ERROR - Failed to notify of availability:", error);
       throw error;
     }
   }
 
   private handlePublishError(error: Error | undefined, topicName: string) {
     if (error) {
-      this.logging.log(`ERROR - Failed to send to ${topicName}:`, error);
+      this.logger.log(`ERROR - Failed to send to ${topicName}:`, error);
     }
   }
 
-  private createAutoDiscoveryConfig(icon: string, id: string, name: string) {
-    return {
-      icon: `${icon}`,
-      "~": `LGTV2MQTT/${this.config.deviceID}/`,
-      availability_topic: `${this.topicAvailability}`,
-      state_topic: `${this.topicState}`,
-      name: `${name}`,
-      unique_id: `${this.config.deviceID}_${id}`,
-      payload_available: "online",
-      payload_not_available: "offline",
-      value_template: `{{ value_json.${id}}}`,
-      device: {
-        identifiers: `${this.config.deviceID}`,
-        name: `${this.config.deviceID}`,
-        manufacturer: "LG",
-      },
-    };
-  }
-
-  private createState(play: string, app: string, type: string): AppState {
-    return { play, app, type };
+  private handleForegroundAppResponse(response: ForegroundAppResponse) {
+    if (!this.client.connected) {
+      this.logger.log("WARNING - MQTT connection lost, unable to publish media state");
+      return;
+    }
+    if (response?.foregroundAppInfo?.[0]?.playState) {
+      this.state = response.foregroundAppInfo[0].playState;
+      this.publishState();
+    } else {
+      this.logger.log("WARNING - Unexpected foreground app update:", response); // TODO: monitor this over time, handle different updates instead of warning
+      this.state = "idle";
+      this.publishState();
+    }
+    this.publishAvailability();
   }
 
   getConnectionState(message: Message) {
@@ -232,6 +196,6 @@ export class LgTvMqtt {
   }
 
   getLogs(message: Message) {
-    message.respond({ logs: this.logging.getLogs() });
+    message.respond({ logs: this.logger.getLogs() });
   }
 }

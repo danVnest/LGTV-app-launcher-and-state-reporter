@@ -134,16 +134,16 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
-// MQTT Connection
+// Monitor the media state reporting service
 const indicator = document.getElementById("service-indicator");
 const overlay = document.getElementById("overlay");
 const logTextbox = overlay.querySelector(".logs-textbox");
 let indicatorHovered = false;
-let checkTimerMQTT = null;
+let checkServiceConnectionTimer = null;
 
-function checkMQTT() {
+function checkServiceConnection() {
   try {
-    webOS.service.request("luna://com.danvnest.applauncher+mqtt.service", {
+    webOS.service.request("luna://com.danvnest.applauncherandstatereporter.service", {
       method: "getConnectionState",
       onFailure: function () {
         indicator.className = "failed";
@@ -159,16 +159,16 @@ function checkMQTT() {
   } catch {
     indicator.className = "failed";
   }
-  if (overlay.className === "logs") getLogsMQTT();
-  clearTimeout(checkTimerMQTT);
-  checkTimerMQTT = setTimeout(checkMQTT, 10000);
+  if (overlay.className === "logs") getServiceLogs();
+  clearTimeout(checkServiceConnectionTimer);
+  checkServiceConnectionTimer = setTimeout(checkServiceConnection, 10000);
 }
 
-function getLogsMQTT() {
+function getServiceLogs() {
   try {
-    webOS.service.request("luna://com.danvnest.applauncher+mqtt.service", {
+    webOS.service.request("luna://com.danvnest.applauncherandstatereporter.service", {
       method: "getLogs",
-      onFailure: handleGetLogsFailureMQTT,
+      onFailure: handleGetServiceLogsFailure,
       onSuccess: function (message) {
         if (message && message.logs) {
           logTextbox.textContent = "";
@@ -176,16 +176,16 @@ function getLogsMQTT() {
             logTextbox.textContent += log + "\n";
           });
         } else {
-          handleGetLogsFailureMQTT();
+          handleGetServiceLogsFailure();
         }
       },
     });
   } catch {
-    handleGetLogsFailureMQTT();
+    handleGetServiceLogsFailure();
   }
 }
 
-function handleGetLogsFailureMQTT() {
+function handleGetServiceLogsFailure() {
   logTextbox.textContent += `${new Date().toISOString()} - Failed to get service logs\n`;
   indicator.className = "failed";
 }
@@ -200,7 +200,7 @@ indicator.addEventListener("click", (event) => {
   if (indicator.matches(":hover")) {
     if (overlay.className !== "logs") {
       overlay.className = "logs";
-      getLogsMQTT();
+      getServiceLogs();
       logTextbox.scrollTop = logTextbox.scrollHeight;
     } else {
       overlay.className = "hidden";
@@ -210,13 +210,13 @@ indicator.addEventListener("click", (event) => {
 
 document.addEventListener("visibilitychange", function () {
   if (!document.hidden) {
-    checkMQTT();
+    checkServiceConnection();
   } else {
-    clearTimeout(checkTimerMQTT);
+    clearTimeout(checkServiceConnectionTimer);
   }
 });
 
 // Startup
 renderGrid();
-checkMQTT();
+checkServiceConnection();
 

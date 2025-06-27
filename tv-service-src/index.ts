@@ -1,15 +1,14 @@
 import Service from "webos-service";
-import { LgTvMqtt, LgTvMqttConfig } from "./lgtv-mqtt";
+import { StateReporter, MQTTConfig } from "./state-reporter";
 
-const service = new Service("com.danvnest.applauncher+mqtt.service");
-const config: LgTvMqttConfig = {
+const service = new Service("com.danvnest.applauncherandstatereporter.service");
+const mqttConfig: MQTTConfig = {
   host: "YOUR MQTT BROKER HOST",
   port: 1883,
   username: "YOUR MQTT USERNAME",
   password: "YOUR MQTT PASSWORD",
-  deviceID: "webOSTVService",
+  deviceID: "TV",
 };
-
-const lgTvMqtt = new LgTvMqtt(service, config);
-service.register("getConnectionState", (message) => lgTvMqtt.getConnectionState(message));
-service.register("getLogs", (message) => lgTvMqtt.getLogs(message));
+const stateReporter = new StateReporter(service, mqttConfig);
+service.register("getConnectionState", (message) => stateReporter.getConnectionState(message));
+service.register("getLogs", (message) => stateReporter.getLogs(message));

@@ -25,7 +25,7 @@ echo "Packaging tv-app and tv-service"
 echo "> ares-package tv-app/ tv-service/\n"
 ares-package tv-app/ tv-service/ || exit 1
 
-package_file="com.danvnest.applauncher+mqtt_1.1.0_all.ipk"
+package_file="com.danvnest.applauncherandstatereporter_2.0.0_all.ipk"
 timeout=5000
 elapsed=0
 while [ ! -e $package_file ] && [ $elapsed -lt $timeout ]; do
