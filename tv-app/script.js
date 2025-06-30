@@ -113,6 +113,10 @@ document.addEventListener("mousemove", () => {
 });
 
 document.addEventListener("keydown", (event) => {
+  if (overlay.className === "logs") {
+    overlay.className = "hidden";
+    return;
+  }
   if (event.key === "Enter") {
     if (focusCardIndex !== null && !isNaN(focusCardIndex) && apps[focusCardIndex]) {
       launchApp(apps[focusCardIndex]);
@@ -197,7 +201,7 @@ overlay.addEventListener("click", (event) => {
 });
 
 // Startup
-renderGrid();
+renderGrid(); // TODO: do we need to do a fade-in once everything is loaded?
 webOS.deviceInfo(function (device) {
   if (device.sdkVersion.split(".")[0] < "7") {
     indicator.className = "pending";
@@ -223,7 +227,9 @@ webOS.deviceInfo(function (device) {
   }
 });
 
-// Startup
-renderGrid();
-checkServiceConnection();
-
+// console.log(`App ID: ${JSON.stringify(webOS.fetchAppId())}`);
+// console.log(`App root path: ${JSON.stringify(webOS.fetchAppRootPath())}`);
+// console.log(`System info: ${JSON.stringify(webOS.systemInfo())}`);
+// webOS.fetchAppInfo(function (info) {
+//   console.log(`App info: ${JSON.stringify(info)}`);
+// });
