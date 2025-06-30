@@ -1,6 +1,6 @@
 {
   "name": "com.danvnest.applauncherandstatereporter.service",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "App Launcher & Media State Reporter",
   "main": "index.js",
   "scripts": {

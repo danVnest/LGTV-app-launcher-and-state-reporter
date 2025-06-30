@@ -64,9 +64,14 @@ body {
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  box-shadow: 0 0 20px rgba(255, 255, 255, 1);
-  transition: background-color 0.5s ease;
+  transition: background-color 0.5s ease, box-shadow 0.5s ease;
   transform: translate(-50%, -50%);
+}
+
+#service-indicator.success::after,
+#service-indicator.pending::after,
+#service-indicator.failed::after {
+  box-shadow: 0 0 20px rgba(255, 255, 255, 1);
 }
 
 #service-indicator.success::after {

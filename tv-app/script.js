@@ -196,23 +196,30 @@ overlay.addEventListener("click", (event) => {
   }
 });
 
-indicator.addEventListener("click", (event) => {
-  if (indicator.matches(":hover")) {
-    if (overlay.className !== "logs") {
-      overlay.className = "logs";
-      getServiceLogs();
-      logTextbox.scrollTop = logTextbox.scrollHeight;
-    } else {
-      overlay.className = "hidden";
-    }
-  }
-});
-
-document.addEventListener("visibilitychange", function () {
-  if (!document.hidden) {
+// Startup
+renderGrid();
+webOS.deviceInfo(function (device) {
+  if (device.sdkVersion.split(".")[0] < "7") {
+    indicator.className = "pending";
     checkServiceConnection();
-  } else {
-    clearTimeout(checkServiceConnectionTimer);
+    indicator.addEventListener("click", (event) => {
+      if (indicator.matches(":hover")) {
+        if (overlay.className !== "logs") {
+          overlay.className = "logs";
+          getServiceLogs();
+          logTextbox.scrollTop = logTextbox.scrollHeight;
+        } else {
+          overlay.className = "hidden";
+        }
+      }
+    });
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) {
+        checkServiceConnection();
+      } else {
+        clearTimeout(checkServiceConnectionTimer);
+      }
+    });
   }
 });
 

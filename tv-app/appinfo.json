@@ -2,7 +2,7 @@
   "title": "App Launcher & Media State Reporter",
   "id": "com.danvnest.applauncherandstatereporter",
   "vendor": "danVnest",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "type": "web",
   "main": "index.html",
   "icon": "icon.png",
