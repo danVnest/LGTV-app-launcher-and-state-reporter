@@ -1,4 +1,4 @@
-package_file="com.danvnest.applauncherandstatereporter_2.0.1_all.ipk"
+package_file="com.danvnest.applauncherandstatereporter_2.0.2_all.ipk"
 
 sdk_version=$(ares-device -i | awk -F': ' '/sdkVersion/ {print $2}')
 sdk_major_version=$(echo "$sdk_version" | cut -d. -f1)
@@ -11,6 +11,11 @@ if [ "$sdk_major_version" -ge 7 ]; then
     echo "> ares-package tv-app/\n"
     ares-package tv-app/ || exit 1
 else
+    if [ ! -f "tv-service-src/mqtt-config.json" ]; then
+        echo "The 'tv-service-src/mqtt-config.json' file does not exist, copy the 'mqtt-config.example.json' template and adjust"
+        exit 1
+    fi
+
     service_changes=true
     checksum_file="tv-service-src/.last_checksum"
     if [ -f "$checksum_file" ]; then

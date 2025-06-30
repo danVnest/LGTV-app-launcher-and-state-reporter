@@ -1,0 +1,7 @@
+{
+  "host": "192.0.2.99",
+  "port": 1883,
+  "username": "username",
+  "password": "password",
+  "deviceID": "TV"
+}

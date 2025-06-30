@@ -1,5 +1,6 @@
 *.code-workspace
 *.ipk
+mqtt-config.json
 tv-service/*
 !tv-service/services.json
 node_modules/
