@@ -46,7 +46,8 @@ export class StateReporter {
   private client: Client;
   private deviceID: string;
   private wasConnected = false;
-  private state: string = "idle";
+  private state: string = "unknown";
+  private foregroundApp = "unknown";
   private stateTopic: string;
   private availabilityTopic: string;
   private publishOptions: IClientPublishOptions = { qos: 0, retain: true };
@@ -159,7 +160,7 @@ export class StateReporter {
   }
 
   private publishState() {
-    this.logger.log(`Sending TV's media state: '${this.state}'`);
+    this.logger.log(`Sending TV's media state for foreground app '${this.foregroundApp}': '${this.state}'`);
     try {
       this.client.publish(this.stateTopic, this.state, this.publishOptions, (error: Error | undefined) =>
         this.handlePublishError(error, this.stateTopic)
@@ -171,7 +172,6 @@ export class StateReporter {
   }
 
   private publishAvailability() {
-    this.logger.log("Sending notification of availability");
     try {
       this.client.publish(this.availabilityTopic, "online", this.publishOptions, (error: Error | undefined) =>
         this.handlePublishError(error, this.availabilityTopic)
@@ -195,10 +195,16 @@ export class StateReporter {
     }
     if (response?.foregroundAppInfo?.[0]?.playState) {
       this.state = response.foregroundAppInfo[0].playState;
+      this.foregroundApp = response.foregroundAppInfo[0].appId;
       this.publishState();
+    } else if ("subscription" in response) {
+      // foreground app provides this if the subscription status updates, ignore
+    } else if (response?.subscribed && response?.returnValue && response?.foregroundAppInfo.length === 0) {
+      this.logger.log("Empty foreground app info recieved, ignoring"); // TODO: monitor this over time, if no reason to log remove this - does it only happen in this app or the home screen? If so that's useful!
     } else {
       this.logger.log("WARNING - Unexpected foreground app update:", response); // TODO: monitor this over time, handle different updates instead of warning
-      this.state = "idle"; // TODO: find all possible states that are reported, is "idle" appropriate? perhaps do "unknown" and handle in Home Assistant
+      this.state = "unknown"; // TODO: find all possible states that are reported, is "idle" appropriate? perhaps do "unknown" and handle in Home Assistant
+      this.foregroundApp = "unknown";
       this.publishState();
     }
     this.publishAvailability();

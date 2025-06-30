@@ -1,4 +1,4 @@
-package_file="com.danvnest.applauncherandstatereporter_2.0.3_all.ipk"
+package_file="com.danvnest.applauncherandstatereporter_2.0.4_all.ipk"
 
 sdk_version=$(ares-device -i | awk -F': ' '/sdkVersion/ {print $2}')
 sdk_major_version=$(echo "$sdk_version" | cut -d. -f1)
