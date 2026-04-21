@@ -46,8 +46,6 @@ export class StateReporter {
   private client: Client;
   private deviceID: string;
   private wasConnected = false;
-  private state: string = "unknown";
-  private foregroundApp = "unknown";
   private stateTopic: string;
   private availabilityTopic: string;
   private publishOptions: IClientPublishOptions = { qos: 0, retain: true };
@@ -107,7 +105,7 @@ export class StateReporter {
       if (!this.wasConnected) {
         this.logger.log("Successfully connected to the Home Assistant MQTT server");
         this.publishAutoDiscovery();
-        this.publishState();
+        this.publishState("unknown");
         this.publishAvailability();
         this.logger.log("Subscribing to media service for foreground app state updates");
         this.service
@@ -121,7 +119,7 @@ export class StateReporter {
         this.wasConnected = true;
       } else {
         this.logger.log("Reconnected to the Home Assistant MQTT server");
-        this.publishState();
+        this.publishState("unknown");
         this.publishAvailability();
       }
     } catch (error) {
@@ -159,10 +157,14 @@ export class StateReporter {
     }
   }
 
-  private publishState() {
-    this.logger.log(`Sending TV's media state for foreground app '${this.foregroundApp}': '${this.state}'`);
+  private publishState(state: string, app?: string) {
+    this.logger.log(
+      "Sending TV's media state" +
+        (app && app !== "unknown" && app !== "unavailable" ? ` for app '${app}'` : "") +
+        `: '${state}'`
+    );
     try {
-      this.client.publish(this.stateTopic, this.state, this.publishOptions, (error: Error | undefined) =>
+      this.client.publish(this.stateTopic, state, this.publishOptions, (error: Error | undefined) =>
         this.handlePublishError(error, this.stateTopic)
       );
     } catch (error) {
@@ -194,18 +196,14 @@ export class StateReporter {
       return;
     }
     if (response?.foregroundAppInfo?.[0]?.playState) {
-      this.state = response.foregroundAppInfo[0].playState;
-      this.foregroundApp = response.foregroundAppInfo[0].appId;
-      this.publishState();
+      this.publishState(response.foregroundAppInfo[0].playState, response.foregroundAppInfo[0].appId);
+    } else if (response?.subscribed && response?.returnValue && response?.foregroundAppInfo.length === 0) {
+      // can happen when going to home screen, but also when an app exits a show or changes to a different section, ignore
     } else if ("subscription" in response) {
       // foreground app provides this if the subscription status updates, ignore
-    } else if (response?.subscribed && response?.returnValue && response?.foregroundAppInfo.length === 0) {
-      this.logger.log("Empty foreground app info recieved, ignoring"); // TODO: monitor this over time, if no reason to log remove this - does it only happen in this app or the home screen? If so that's useful!
     } else {
       this.logger.log("WARNING - Unexpected foreground app update:", response); // TODO: monitor this over time, handle different updates instead of warning
-      this.state = "unknown"; // TODO: find all possible states that are reported, is "idle" appropriate? perhaps do "unknown" and handle in Home Assistant
-      this.foregroundApp = "unknown";
-      this.publishState();
+      this.publishState("unknown");
     }
     this.publishAvailability();
   }
