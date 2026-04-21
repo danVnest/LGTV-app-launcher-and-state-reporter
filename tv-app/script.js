@@ -5,15 +5,15 @@ const apps = [
   { id: "amazon", icon: "icons/prime.png" },
   { id: "com.disney.disneyplus-prod", icon: "icons/disney.png" },
   { id: "stan.webos2", icon: "icons/stan.png" },
-  { id: "binge", icon: "icons/binge.png" },
+  { id: "com.streamotion.binge", icon: "icons/binge.png" },
   { id: "abc", icon: "icons/abc.png" },
   { id: "sbs", icon: "icons/sbs.png" },
   { id: "com.swm.7plus", icon: "icons/7plus.png" },
   { id: "com.accedo.mi9.prod", icon: "icons/9now.png" },
-  { id: "ten", icon: "icons/10play.png" },
+  { id: "au.com.10play", icon: "icons/10play.png" },
   { id: "youtube.leanback.v4", icon: "icons/youtube.png" },
   { id: "spotify-beehive", icon: "icons/spotify.png" },
-  { id: "justwatch", icon: "icons/justwatch.png" },
+  { id: "com.justwatch.justwatch", icon: "icons/justwatch.png" },
   { id: "com.webos.app.hdmi1", icon: "icons/windows11.png" },
 ];
 
