@@ -58,7 +58,11 @@ mode: single
 ### Automate Developer Mode Renewal
 
 1. Run the following SSH command, replacing `<TV-ID>` and `<TV-IP>`:
-`ssh -i ~/.ssh/<TV-ID>_webos -p 9922 prisoner@1<TV-IP> -oHostKeyAlgorithms=+ssh-rsa -oPubkeyAcceptedAlgorithms=+ssh-rsa "cat /var/luna/preferences/devmode_enabled; echo"`
+
+    ```bash
+    ssh -i ~/.ssh/<TV-ID>_webos -p 9922 prisoner@<TV-IP> -oHostKeyAlgorithms=+ssh-rsa -oPubkeyAcceptedAlgorithms=+ssh-rsa "cat /var/luna/preferences/devmode_enabled; echo"
+    ```
+
 2. Add the following `rest_command` action to Home Assistant, replacing `<KEY>` with the output from the previous step:
 
     ```yaml
@@ -83,6 +87,22 @@ mode: single
         - sun
     mode: single
     ```
+
+### Binary Sensor Simplification
+
+For many Home Assistant automations, all you want to know is if the TV is playing or not. A template binary sensor works well in this case. You can also more accurately report availability, as you can assume the TV isn’t playing if the LGTV integration reports it as being off.
+
+    ```yaml
+    template:
+      - binary_sensor:
+        - name: TV playing
+          unique_id: tv_playing
+          state: "{{ states('sensor.tv_state') == 'playing' and states('media_player.tv') == 'on' }}"
+          icon: mdi:play-pause
+          availability: "{{ has_value('sensor.tv_state') or states('media_player.tv') == 'off' }}"
+    ```
+
+In my case, I did some [more complex checks with AppDaemon](https://github.com/danVnest/home-assistant/blob/main/appdaemon/apps/media.py) to handle disconnection and if my PC was connected.
 
 ## Relevant Resources
 
