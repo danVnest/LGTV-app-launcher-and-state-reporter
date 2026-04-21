@@ -113,6 +113,7 @@ document.addEventListener("mousemove", () => {
 });
 
 document.addEventListener("keydown", (event) => {
+  if (event.keyCode === 1536 || event.keyCode === 1537) return; // ignore cursor show/hide
   if (overlay.className === "logs") {
     overlay.className = "hidden";
     return;
